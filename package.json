@@ -1,0 +1,26 @@
+{
+  "name": "blockchain",
+  "version": "1.0.0",
+  "main": "block.js",
+  "scripts": {
+    "build": "rollup -c ./rollup.config.js",
+    "verify": "npm run build && node dist/test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "args": "^3.0.8",
+    "axios": "^0.18.0",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "bignumber": "^1.1.0",
+    "js-sha256": "^0.9.0",
+    "koa": "^2.5.0",
+    "koa-router": "^7.4.0",
+    "rollup": "^0.56.4",
+    "rollup-plugin-babel": "^3.0.3",
+    "superagent": "^3.8.2"
+  },
+  "dependencies": {},
+  "description": ""
+}

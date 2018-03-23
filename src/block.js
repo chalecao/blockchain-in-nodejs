@@ -13,10 +13,10 @@ const state = {
 }
 
 export const Block = {
-    generate: (blockNumber, transaction, nonce, prevBlock) => {
+    generate: (blockNumber, transaction, nonce, prevBlock,timestamp) => {
         state.blockNumber = blockNumber
-        state.transaction = transaction
-        state.timestamp = Date.now()
+        state.transaction = JSON.stringify(transaction)
+        state.timestamp = timestamp || Date.now()
         state.nonce = nonce
         state.prevBlock = prevBlock
         return Object.assign({},state)

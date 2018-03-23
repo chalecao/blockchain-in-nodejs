@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "block.js",
   "scripts": {
+    "server": "node app.js -p 3001 && node app.js -p 3002 ",
     "build": "rollup -c ./rollup.config.js",
     "verify": "npm run build && node dist/test.js"
   },
@@ -13,7 +14,8 @@
     "axios": "^0.18.0",
     "babel-core": "^6.26.0",
     "babel-preset-env": "^1.6.1",
-    "bignumber": "^1.1.0",
+    "babel-preset-stage-3": "^6.24.1",
+    "bignumber.js": "^6.0.0",
     "js-sha256": "^0.9.0",
     "koa": "^2.5.0",
     "koa-router": "^7.4.0",

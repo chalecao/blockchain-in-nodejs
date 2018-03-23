@@ -3,7 +3,7 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var jsSha256 = require('js-sha256');
-var bignumber = require('bignumber');
+var bignumber_js = require('bignumber.js');
 var fs = require('fs');
 var path = require('path');
 
@@ -13,14 +13,14 @@ var path = require('path');
  * senderAddr：付款人地址
  * value：交易金额
  */
-var state = {
+const state = {
     recipientAddr: "",
     senderAddr: "",
     value: 0
 };
 
-var Transaction = {
-    generate: function generate(rec, sen, val) {
+const Transaction = {
+    generate: (rec, sen, val) => {
         state.recipientAddr = rec;
         state.senderAddr = sen;
         state.value = val;
@@ -34,7 +34,7 @@ var Transaction = {
  * @blockNumber: 区块id
  * @transaction：交易记录列表
  */
-var state$1 = {
+const state$1 = {
     blockNumber: 0,
     transaction: [],
     timestamp: Date.now(),
@@ -42,107 +42,179 @@ var state$1 = {
     prevBlock: ""
 };
 
-var Block = {
-    generate: function generate(blockNumber, transaction, nonce, prevBlock) {
+const Block = {
+    generate: (blockNumber, transaction, nonce, prevBlock, timestamp) => {
         state$1.blockNumber = blockNumber;
-        state$1.transaction = transaction;
-        state$1.timestamp = Date.now();
+        state$1.transaction = JSON.stringify(transaction);
+        state$1.timestamp = timestamp || Date.now();
         state$1.nonce = nonce;
         state$1.prevBlock = prevBlock;
         return Object.assign({}, state$1);
     },
-    computeSha256: function computeSha256(state) {
+    computeSha256: state => {
         return jsSha256.sha256(JSON.stringify(state));
     }
 };
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var COINBASE_SENDER = "<COINBASE>";
-var COINBASE_REWARD = 50;
+/**
+ * 节点数据结构
+ * @id: 节点id
+ * @url: 节点url
+ */
+const state$2 = {
+    id: 0,
+    url: ""
+};
 
-var difficulty = 4;
-var state$2 = {
+const NodeAction = {
+    generate: (id, url) => {
+        state$2.id = id;
+        state$2.url = url;
+        return _extends({}, state$2);
+    }
+};
+
+/**
+ * Block Chain
+ * @nodeId: id
+ * @blocks: block list
+ * @transactionPool：交易池
+ */
+
+const COINBASE_SENDER = "<COINBASE>";
+const COINBASE_REWARD = 50;
+
+const difficulty = 1;
+const state$3 = {
     nodeId: 0,
     blocks: [],
+    nodes: [],
     transactionPool: [],
-    genesisBlock: Block.generate(0, [], 0, ""),
+    genesisBlock: Block.generate(0, [], 0, "", 1),
     target: Math.pow(2, 256 - difficulty),
     storagePath: ""
 };
 
-var BlockChain = {
-    init: function init(id) {
-        state$2.nodeId = id;
-        state$2.storagePath = path.resolve(__dirname, "../data/", state$2.nodeId + '.blockchain');
-        state$2.blocks.push(state$2.genesisBlock);
+const BlockChain = {
+    init: id => {
+        state$3.nodeId = id;
+        state$3.storagePath = path.resolve(__dirname, "../data/", `${state$3.nodeId}.blockchain`);
+        state$3.blocks.push(state$3.genesisBlock);
     },
-    getBlocks: function getBlocks() {
-        return state$2.blocks;
+    register: (id, url) => {
+        if (state$3.nodes.find(item => item.id == id)) {
+            return false;
+        } else {
+            state$3.nodes.push(NodeAction.generate(id, url));
+            return true;
+        }
     },
-    load: function load() {
+
+    getNodes: () => {
+        return state$3.nodes;
+    },
+    getBlocks: () => {
+        return state$3.blocks;
+    },
+
+    load: () => {
         try {
-            state$2.blocks = JSON.parse(fs.readFileSync(state$2.storagePath, "utf-8"));
+            state$3.blocks = JSON.parse(fs.readFileSync(state$3.storagePath, "utf-8"));
         } catch (e) {
-            state$2.blocks = [state$2.genesisBlock];
+            state$3.blocks = [state$3.genesisBlock];
         }
 
         try {
-            state$2.blocks = JSON.parse(fs.readFileSync(state$2.storagePath, "utf-8"));
+            state$3.blocks = JSON.parse(fs.readFileSync(state$3.storagePath, "utf-8"));
         } catch (e) {
             console.log("read error, init blocks");
-            state$2.blocks = [state$2.genesisBlock];
+            state$3.blocks = [state$3.genesisBlock];
         } finally {
-            BlockChain.verify();
+            BlockChain.verify(state$3.blocks);
         }
     },
-    save: function save() {
+    save: () => {
 
-        fs.writeFileSync(state$2.storagePath, JSON.stringify(state$2.blocks), "utf-8");
+        fs.writeFileSync(state$3.storagePath, JSON.stringify(state$3.blocks), "utf-8");
     },
-    verify: function verify() {
-        if (!state$2.blocks.length) {
-            console.log("blocks can't be empty!");
-        }
-        if (JSON.stringify(state$2.genesisBlock) != JSON.stringify(state$2.blocks[0])) {
-            throw new Error("genesis block data error!");
-        }
-
-        state$2.blocks.forEach(function (item, index) {
-            //verify prevBlock
-            if (index > 0 && item.prevBlock != Block.computeSha256(state$2.blocks[index - 1])) {
-                throw new Error("invalid prev block sha256");
-            }
-            if (!BlockChain.idPowValid(Block.computeSha256(item))) {
-                throw new Error("invalid pow");
-            }
-        });
-    },
-    submitTransaction: function submitTransaction(send, rec, val) {
-        state$2.transactionPool.push(Transaction.generate(send, rec, val));
-    },
-    getTransaction: function getTransaction() {
-        return state$2.transactionPool;
-    },
-    idPowValid: function idPowValid(pow) {
+    verify: blocks => {
         try {
-            if (pos.startswith("0x")) {
-                pos = "0x" + pos;
+            if (!blocks.length) {
+                console.log("blocks can't be empty!");
+                throw new Error("blocks can't be empty!");
             }
-            return new bignumber.BigNumber(pow).lessThanOrEqual(state$2.target);
+
+            if (JSON.stringify(state$3.genesisBlock) != JSON.stringify(blocks[0])) {
+                throw new Error("genesis block data error!");
+            }
+
+            blocks.forEach((item, index) => {
+                //verify prevBlock
+                if (index > 0 && item.prevBlock != Block.computeSha256(blocks[index - 1])) {
+                    throw new Error("invalid prev block sha256");
+                }
+
+                if (index > 0 && !BlockChain.idPowValid(Block.computeSha256(item))) {
+                    console.log("---item---", item);
+                    console.log("---item---", Block.computeSha256(item));
+                    throw new Error("invalid pow");
+                }
+            });
+            return true;
         } catch (e) {
+            console.log(e);
             return false;
         }
     },
-    mineBlock: function mineBlock() {
-        var transactions = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+    consensus: blockChains => {
+        let maxLength = 0,
+            candidateIndex = -1;
+        blockChains.forEach((item, index) => {
+            console.log("--------------------consensus-----------", item, BlockChain.verify(item));
 
-        var lastBlock = state$2.blocks[state$2.blocks.length - 1];
-        transactions = [Transaction.generate(COINBASE_SENDER, state$2.nodeId, COINBASE_REWARD)].concat(_toConsumableArray(transactions));
-        var newBlock = Block.generate(lastBlock.blockNumber + 1, transactions, 0, Block.computeSha256(lastBlock));
+            if (item.length < maxLength) {} else if (BlockChain.verify(item)) {
+                maxLength = item.length;
+                candidateIndex = index;
+            }
+        });
+        console.log(candidateIndex, maxLength, BlockChain.verify(state$3.blocks));
+        if (candidateIndex >= 0 && (maxLength >= state$3.blocks.length || !BlockChain.verify(state$3.blocks))) {
+            state$3.blocks = [...blockChains[candidateIndex]];
+            BlockChain.save();
+            return true;
+        }
+        return false;
+    },
+    submitTransaction: (send, rec, val) => {
+        state$3.transactionPool.push(Transaction.generate(send, rec, val));
+    },
+    getTransaction: () => {
+        return state$3.transactionPool;
+    },
+    idPowValid: pow => {
+        try {
+            if (!pow.startsWith("0x")) {
+                pow = "0x" + pow;
+            }
+            console.log(new bignumber_js.BigNumber(pow));
+            console.log(state$3.target);
+            return new bignumber_js.BigNumber(pow).isLessThanOrEqualTo(state$3.target);
+        } catch (e) {
+            console.log(e);
+            return false;
+        }
+    },
+    mineBlock: (transactions = []) => {
+        let lastBlock = state$3.blocks[state$3.blocks.length - 1];
+
+        transactions = [Transaction.generate(COINBASE_SENDER, state$3.nodeId, COINBASE_REWARD), ...transactions];
+
+        const newBlock = Block.generate(lastBlock.blockNumber + 1, transactions, 0, Block.computeSha256(lastBlock));
         while (true) {
-            var sha = Block.computeSha256(newBlock);
-            console.log("mine block with nonce", newBlock.nonce);
+            let sha = Block.computeSha256(newBlock);
+            // console.log("mine block with nonce", newBlock.nonce)
             if (BlockChain.idPowValid(sha) || newBlock.nonce > 1000) {
                 console.log("find block", sha);
                 break;
@@ -152,9 +224,10 @@ var BlockChain = {
 
         return newBlock;
     },
-    createBlock: function createBlock() {
-        var newBlock = BlockChain.mineBlock(BlockChain.transactionPool);
-        BlockChain.blocks.push(newBlock);
+    createBlock: () => {
+        const newBlock = BlockChain.mineBlock(BlockChain.transactionPool);
+
+        state$3.blocks.push(newBlock);
         BlockChain.transactionPool = [];
         BlockChain.save();
         return newBlock;

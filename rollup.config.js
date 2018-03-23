@@ -11,9 +11,13 @@ export default [{
             "presets": [[
                 "env",
                 {
-                    "modules": false
+                    "modules": false,
+                    "targets": {
+                        "node": "current"
+                      }
                 }
-            ]]
+            ],"stage-3"]
+            
         })
     ]
 },{
@@ -27,9 +31,12 @@ export default [{
             "presets": [[
                 "env",
                 {
-                    "modules": false
+                    "modules": false,
+                    "targets": {
+                        "node": "current"
+                      }
                 }
-            ]]
+            ],"stage-3"]
         })
     ]
 }]

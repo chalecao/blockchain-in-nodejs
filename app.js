@@ -2,6 +2,7 @@
 // 在koa2中，我们导入的是一个class，因此用大写的Koa表示:
 const Koa = require('koa');
 const args = require('args');
+const axios = require('axios');
 
 args
     .option('port', 'The port on which the app will be running', 3000)
@@ -21,7 +22,7 @@ blockChain.init(1000)
 
 // log request URL:
 app.use(async (ctx, next) => {
-    console.log(`Process ${ctx.request.method} ${ctx.request.url}...`);
+    console.log(`Process ${ctx.request.method} ${ctx.request.host} ${ctx.request.url}...`);
     await next();
 });
 
@@ -87,12 +88,14 @@ router.post('/nodes', async (ctx, next) => {
 });
 //consensus
 router.put('/nodes/consensus', async (ctx, next) => {
+
     let reqs = blockChain.getNodes().map(node => axios.get(`${node.url}blocks`))
+
     if (!reqs.length) {
         ctx.response.body = `no node need to sync！ `;
     } else {
         await axios.all(reqs).then(axios.spread((...blockChains) => {
-            if (blockChain.consensus(blockChains)) {
+            if (blockChain.consensus(blockChains.map(res=> res.data ))) {
                 ctx.response.body = `get consensus！ `;
             } else {
                 ctx.response.body = `no consensus get！ `;
@@ -102,7 +105,8 @@ router.put('/nodes/consensus', async (ctx, next) => {
 });
 
 router.get('/mine', async (ctx, next) => {
-    const newBlock = blockChain.mineBlock(blockChain.getTransaction())
+    const newBlock = blockChain.createBlock()
+    console.log(blockChain.getBlocks())
     ctx.response.body = `mine new block ${newBlock.blockNumber} `;
 });
 

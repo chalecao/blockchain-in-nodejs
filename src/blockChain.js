@@ -155,10 +155,10 @@ export const BlockChain = {
         return newBlock;
     },
     createBlock: () => {
-        const newBlock = BlockChain.mineBlock(BlockChain.transactionPool)
+        const newBlock = BlockChain.mineBlock(state.transactionPool)
 
         state.blocks.push(newBlock)
-        BlockChain.transactionPool = []
+        state.transactionPool = []
         BlockChain.save()
         return newBlock
     }

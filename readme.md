@@ -1,5 +1,5 @@
 ## 前端自己用NodeJS编写区块链BlockChain
-博客地址：[前端学堂FED123](http://www.fed123.com/2018/03/06/yongnodejsbianxiequkuailianblockchain/)
+博客地址：[前端学堂FED123](https://www.fed123.com/fed-regain/1618.html)
 
 视频教程链接地址：[http://t.cn/REeoF7v](http://t.cn/REeoF7v)
 

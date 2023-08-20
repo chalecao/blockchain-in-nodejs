@@ -1,6 +1,6 @@
 ## 前端自己用NodeJS编写区块链BlockChain
 
-视频教程链接地址：[NodeJS编写区块链实战]([http://t.cn/REeoF7v](https://study.163.com/course/courseMain.htm?courseId=1005096001&share=2&shareId=400000000351011))
+视频教程链接地址：[NodeJS编写区块链实战](https://study.163.com/course/courseMain.htm?courseId=1005096001&share=2&shareId=400000000351011)
 
 官方博客： [万维刀客](https://www.w3cdoc.com/)
 
